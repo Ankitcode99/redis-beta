@@ -8,10 +8,18 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
 
     connection.on('data', (data: string) =>{
 
-        const input: string[] = data.toString().trim().split('\n');
-        for(let i = 0; i < input.length; i++) {
-            connection.write("+PONG\r\n")
-        }
+        const commands = data.toString().trim().split('\n');
+        // Process each command
+
+        commands.forEach(command => {
+
+            if (command.trim() === "PING") {
+
+                connection.write('+PONG\r\n');
+
+            }
+
+        });
     })
 
     // connection.on('end', () => {
