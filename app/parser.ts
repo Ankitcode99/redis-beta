@@ -40,7 +40,6 @@ export default class RedisParser {
                 return `\$${output.length}\r\n${output}\r\n`;
             default:
                 return ""
-        }
-        
+        }   
     }
 }
