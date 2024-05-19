@@ -11,6 +11,9 @@ const hashMap = new Map();
 const redisPort = parseInt(process.argv[3]) || 6379;
 const role = process.argv[4] == "--replicaof" ? "slave" : "master";
 
+const masterReplId = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
+const masterOffset = 0;
+
 console.log(process.argv[3])
 // Uncomment this block to pass the first stage
 
@@ -46,7 +49,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
             }
         break;
         case CliCommands.INFO: 
-            connection.write(RedisParser.convertOutputToRESP(`role:${role}`, CliCommands.INFO));
+            connection.write(RedisParser.convertOutputToRESP(`role:${role}\r\nmaster_replid:${masterReplId}\r\nmaster_repl_offset:0`, CliCommands.INFO));
             break;
     }
   });
