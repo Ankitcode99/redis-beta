@@ -36,7 +36,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
       case "SET":
         hashMap.set(cmd[1], cmd[2]);
         connection.write(RedisParser.convertOutputToRESP(ResponseConstants.OK, CliCommands.SET));
-        if (cmd[3].toUpperCase() == "PX") {
+        if (cmd[3] && cmd[3].toUpperCase() == "PX") {
           setTimeout(() => {
             hashMap.delete(cmd[1]);
           }, parseInt(cmd[4]));
