@@ -1,63 +1,49 @@
-import * as net from "net";
 import RedisParser from "./parser";
 import CliCommands from "./commands";
 import ResponseConstants from "./contants";
-import { MyCache } from "./cache";
-import exp from "constants";
+import * as net from "node:net";
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
+
 console.log("Logs from your program will appear here!");
-let key=""
-const cacheObj = new MyCache();
+
+const hashMap = new Map();
+
 // Uncomment this block to pass the first stage
+
 const server: net.Server = net.createServer((connection: net.Socket) => {
 
-    connection.on('data', (data: string) =>{
-        console.log("Got data from server ", data.toString() )
-        const commands = RedisParser.parseInput(data.toString())
-        // Process each command
-        console.log("Commands: " + commands)
-        for(let idx=0;idx<commands.length;) {
-            // console.log("idx - ", idx)
-            switch (commands[idx]) {
-                case CliCommands.PING:
-                    connection.write(RedisParser.convertOutputToRESP(ResponseConstants.PONG, CliCommands.PING));
-                    idx += 1;
-                    break;
-                case CliCommands.ECHO:
-                    connection.write(RedisParser.convertOutputToRESP(commands[idx + 1], CliCommands.ECHO));
-                    idx += 2;
-                    break;
-                case CliCommands.SET:
-                    key = commands[idx+1];
-                    const value = commands[idx+2];
-                    const expiry = parseInt(commands[idx+4]);
-                    cacheObj.set(key, value, expiry);
-                    connection.write(RedisParser.convertOutputToRESP(ResponseConstants.OK, CliCommands.SET));
-                    idx += 3;
-                    break;
-                
-                case CliCommands.GET: 
-                    key = commands[idx+1];
-                    const cachedValue = cacheObj.get(key) || undefined;
-                    console.log(":: Making GET for key: " + key + " value: " + cachedValue);
-                    connection.write(RedisParser.convertOutputToRESP(cachedValue, CliCommands.GET));
-                    idx += 2;
-                    break;
-                
-            }
-            
-        }
-    })
+  /* Handle connection */
 
-    connection.on('end', () => {
-        console.log('Connection closed');
-    });
-    
-      // Handle errors
-    connection.on('error', (err) => {
-        console.error('Error:', err);
-    });
+  connection.on("data", (data) => {
+
+    const cmd = RedisParser.parseInput(data.toString());
+    console.log("cmd: " + cmd);
+    const upperCase = cmd[0].toUpperCase();
+
+    console.log("upercaseVariable", upperCase);
+
+    switch (upperCase) {
+      case "PING":
+        connection.write(RedisParser.convertOutputToRESP(ResponseConstants.PONG, CliCommands.PING));
+        break;
+      case "ECHO":
+        connection.write(RedisParser.convertOutputToRESP(cmd[1], CliCommands.ECHO));
+        break;
+      case "GET":
+          connection.write(RedisParser.convertOutputToRESP(hashMap.get(cmd[1]), CliCommands.GET));
+          break;
+      case "SET":
+        hashMap.set(cmd[1], cmd[2]);
+        connection.write(RedisParser.convertOutputToRESP(ResponseConstants.OK, CliCommands.SET));
+        if (cmd[3].toUpperCase() == "PX") {
+          setTimeout(() => {
+            hashMap.delete(cmd[1]);
+          }, parseInt(cmd[4]));
+        }
+        break;
+    }
+  });
 
 });
 
