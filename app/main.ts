@@ -3,6 +3,7 @@ import RedisParser from "./parser";
 import CliCommands from "./commands";
 import ResponseConstants from "./contants";
 import { MyCache } from "./cache";
+import exp from "constants";
 
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
@@ -30,7 +31,8 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
                 case CliCommands.SET:
                     key = commands[idx+1];
                     const value = commands[idx+2];
-                    cacheObj.set(key, value);
+                    const expiry = parseInt(commands[idx+4]);
+                    cacheObj.set(key, value, expiry);
                     connection.write(RedisParser.convertOutputToRESP(ResponseConstants.OK, CliCommands.SET));
                     idx += 3;
                     break;

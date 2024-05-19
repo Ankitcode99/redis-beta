@@ -10,20 +10,26 @@ export class MyCache {
         // this.TTL = CacheOptions.ttl;
         this.cacheObj = new Map<string|number, any>()
 
-        /**setInterval(()=>{
-            Object.entries(this.cacheObj).forEach(([key, value])=>{
-                if(value.expiry < Date.now()) {
-                    this.cacheObj.delete(key);
-                }
-            })
-        }, CacheOptions.evictionDuration * 1000)*/
+        // setInterval(()=>{
+        //     Object.entries(this.cacheObj).forEach(([key, value])=>{
+        //         if(value.expiry < Date.now()) {
+        //             this.cacheObj.delete(key);
+        //         }
+        //     })
+        // }, CacheOptions.evictionDuration * 1000)
     }
 
-    set(key:string|number, value:any): void {
+    set(key:string|number, value:any, expiry: number=-1): void {
         this.cacheObj.set(key, {
             value: value,
             expiry: Date.now() + this.TTL * 1000
         })
+
+        if(expiry==-1) {
+            setTimeout(()=>{
+                this.cacheObj.delete(key);
+            }, expiry)
+        }
     }
 
     get(key: string|number): any {
