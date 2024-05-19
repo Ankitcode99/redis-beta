@@ -17,7 +17,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
         // Process each command
         console.log("Commands: " + commands)
         for(let idx=0;idx<commands.length;) {
-            console.log("idx - ", idx)
+            // console.log("idx - ", idx)
             switch (commands[idx]) {
                 case CliCommands.PING:
                     connection.write(RedisParser.convertOutputToRESP(ResponseConstants.PONG, CliCommands.PING));
