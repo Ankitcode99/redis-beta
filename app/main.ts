@@ -7,10 +7,21 @@ console.log("Logs from your program will appear here!");
 const server: net.Server = net.createServer((connection: net.Socket) => {
 
     connection.on('data', (data: string) =>{
-        console.log("Got data from server - ", data.toString())
 
-        connection.write("+PONG\r\n")
+        const input: string[] = data.toString().split('\n');
+        for(let i = 0; i < input.length; i++) {
+            connection.write("+PONG\r\n")
+        }
     })
+
+    // connection.on('end', () => {
+    //     console.log('Connection closed');
+    // });
+    
+      // Handle errors
+    connection.on('error', (err) => {
+        console.error('Error:', err);
+    });
 
 });
 
