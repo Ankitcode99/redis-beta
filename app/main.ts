@@ -13,7 +13,7 @@ const cacheObj = new MyCache();
 const server: net.Server = net.createServer((connection: net.Socket) => {
 
     connection.on('data', (data: string) =>{
-
+        console.log("Got data from server ", data.toString() )
         const commands = RedisParser.parseInput(data.toString())
         // Process each command
         console.log("Commands: " + commands)
