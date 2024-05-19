@@ -39,7 +39,9 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
                 
                 case CliCommands.GET: 
                     key = commands[idx+1];
-                    connection.write(RedisParser.convertOutputToRESP(cacheObj.get(key), CliCommands.GET));
+                    const cachedValue = cacheObj.get(key) || undefined;
+                    console.log(":: Making GET for key: " + key + " value: " + cachedValue);
+                    connection.write(RedisParser.convertOutputToRESP(cachedValue, CliCommands.GET));
                     idx += 2;
                     break;
                 
