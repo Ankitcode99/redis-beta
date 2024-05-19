@@ -22,9 +22,9 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
         });
     })
 
-    // connection.on('end', () => {
-    //     console.log('Connection closed');
-    // });
+    connection.on('end', () => {
+        console.log('Connection closed');
+    });
     
       // Handle errors
     connection.on('error', (err) => {
