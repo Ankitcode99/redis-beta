@@ -8,7 +8,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
 
     connection.on('data', (data: string) =>{
 
-        const input: string[] = data.toString().split('\n');
+        const input: string[] = data.toString().trim().split('\n');
         for(let i = 0; i < input.length; i++) {
             connection.write("+PONG\r\n")
         }
