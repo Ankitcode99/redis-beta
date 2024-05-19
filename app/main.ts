@@ -25,24 +25,26 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
     console.log("upercaseVariable", upperCase);
 
     switch (upperCase) {
-      case "PING":
-        connection.write(RedisParser.convertOutputToRESP(ResponseConstants.PONG, CliCommands.PING));
+        case CliCommands.PING:
+            connection.write(RedisParser.convertOutputToRESP(ResponseConstants.PONG, CliCommands.PING));
         break;
-      case "ECHO":
-        connection.write(RedisParser.convertOutputToRESP(cmd[1], CliCommands.ECHO));
+        case CliCommands.ECHO:
+            connection.write(RedisParser.convertOutputToRESP(cmd[1], CliCommands.ECHO));
         break;
-      case "GET":
-          connection.write(RedisParser.convertOutputToRESP(hashMap.get(cmd[1]), CliCommands.GET));
-          break;
-      case "SET":
-        hashMap.set(cmd[1], cmd[2]);
-        connection.write(RedisParser.convertOutputToRESP(ResponseConstants.OK, CliCommands.SET));
-        if (cmd[3] && cmd[3].toUpperCase() == "PX") {
-          setTimeout(() => {
-            hashMap.delete(cmd[1]);
-          }, parseInt(cmd[4]));
-        }
+        case CliCommands.GET:
+            connection.write(RedisParser.convertOutputToRESP(hashMap.get(cmd[1]), CliCommands.GET));
+            break;
+        case CliCommands.SET:
+            hashMap.set(cmd[1], cmd[2]);
+            connection.write(RedisParser.convertOutputToRESP(ResponseConstants.OK, CliCommands.SET));
+            if (cmd[3] && cmd[3].toUpperCase() == "PX") {
+                setTimeout(() => {
+                hashMap.delete(cmd[1]);
+                }, parseInt(cmd[4]));
+            }
         break;
+        case CliCommands.INFO: 
+            connection.write(RedisParser.convertOutputToRESP("role:master", CliCommands.INFO));
     }
   });
 

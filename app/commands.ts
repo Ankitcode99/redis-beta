@@ -3,4 +3,5 @@ export default class CliCommands {
     public static ECHO = "ECHO";
     public static SET = "SET";
     public static GET = "GET";
+    public static INFO = "INFO";
 }
