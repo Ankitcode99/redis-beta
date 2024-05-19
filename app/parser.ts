@@ -26,11 +26,16 @@ export default class RedisParser {
         return arr;
     }
 
-    public static convertOutputToRESP(output: string, command: string): string {
+    public static convertOutputToRESP(output: string|undefined, command: string): string {
         switch (command) {
             case CliCommands.PING:
+            case CliCommands.SET:
                 return `+${output}\r\n`;
             case CliCommands.ECHO:
+            case CliCommands.GET:
+                if(!output) {
+                    return "$-1\r\n"
+                }
                 return `\$${output.length}\r\n${output}\r\n`;
             default:
                 return ""
