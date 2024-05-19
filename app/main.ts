@@ -19,7 +19,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
                 connection.write(RedisParser.convertOutputToRESP("PONG", CliCommands.PING))
                 idx += 1;
             } else if(commands[idx] == CliCommands.ECHO) {
-                console.log("echo o/p-", commands[idx+1])
+                // console.log("echo o/p-", commands[idx+1])
                 connection.write(RedisParser.convertOutputToRESP(commands[idx+1], CliCommands.ECHO));
                 idx += 2;   
             }
