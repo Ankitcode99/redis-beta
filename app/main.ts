@@ -9,6 +9,8 @@ console.log("Logs from your program will appear here!");
 
 const hashMap = new Map();
 const redisPort = parseInt(process.argv[3]) || 6379;
+const role = process.argv[4] == "--replicaof" ? "slave" : "master";
+
 console.log(process.argv[3])
 // Uncomment this block to pass the first stage
 
@@ -44,7 +46,8 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
             }
         break;
         case CliCommands.INFO: 
-            connection.write(RedisParser.convertOutputToRESP("role:master", CliCommands.INFO));
+            connection.write(RedisParser.convertOutputToRESP(`role:${role}`, CliCommands.INFO));
+            break;
     }
   });
 

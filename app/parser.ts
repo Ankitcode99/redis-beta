@@ -33,11 +33,13 @@ export default class RedisParser {
                 return `+${output}\r\n`;
             case CliCommands.ECHO:
             case CliCommands.GET:
-            case CliCommands.INFO:
                 if(!output) {
                     return "$-1\r\n"
                 }
                 return `\$${output.length}\r\n${output}\r\n`;
+            case CliCommands.INFO:
+
+                return `\$${output!.length}\r\n${output}\r\n`;
             default:
                 return ""
         }   
