@@ -22,7 +22,7 @@ export class MyCache {
     set(key:string|number, value:any, expiry: number=-1): void {
         this.cacheObj.set(key, {
             value: value,
-            expiry: Date.now() + this.TTL * 1000
+            expiry: -1
         })
 
         if(expiry==-1) {
