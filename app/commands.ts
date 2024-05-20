@@ -5,4 +5,5 @@ export default class CliCommands {
     public static GET = "GET";
     public static INFO = "INFO";
     public static REPLCONF = "REPLCONF";
+    public static PSYNC = "PSYNC";
 }

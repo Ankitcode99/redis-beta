@@ -33,6 +33,10 @@ if(masterInfo && masterInfo.length) {
                 slaveSocketClient.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'capa', 'psync2']));
                 step++;
                 break;
+            case 3: 
+                slaveSocketClient.write(RedisParser.convertToBulkStringArray(['PSYNC', '?', '-1']))
+                step++;
+                break;
         }
     })
 }
@@ -70,6 +74,9 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
             break;
         case CliCommands.REPLCONF:
             connection.write(RedisParser.convertToSimpleString(ResponseConstants.OK));
+            break;
+        case CliCommands.PSYNC:
+            connection.write(RedisParser.convertToSimpleString(`FULLRESYNC ${masterReplId} 0`));
             break;
     }
   });
