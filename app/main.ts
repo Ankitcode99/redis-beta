@@ -3,9 +3,6 @@ import CliCommands from "./commands";
 import ResponseConstants from "./contants";
 import * as net from "node:net";
 
-// You can use print statements as follows for debugging, they'll be visible when running tests.
-
-console.log("Logs from your program will appear here!");
 
 const hashMap = new Map();
 const redisPort = parseInt(process.argv[3]) || 6379;
@@ -15,8 +12,7 @@ const masterReplId = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
 const masterOffset = 0;
 
 const masterInfo = process.argv[5] && process.argv[5].length>0 ? process.argv[5].trim().split(' ') : ""
-// console.log(process.argv)
-// Uncomment this block to pass the first stage
+
 
 if(masterInfo && masterInfo.length) {
     console.warn("GOING IN CLIENT SOCKET!!")
@@ -36,11 +32,8 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
 
     const cmd = RedisParser.parseInput(data.toString());
     console.log("cmd: " + cmd);
-    const upperCase = cmd[0].toUpperCase();
 
-    console.log("upercaseVariable", upperCase);
-
-    switch (upperCase) {
+    switch (cmd[0].toUpperCase()) {
         case CliCommands.PING:
             connection.write(RedisParser.convertToSimpleString(ResponseConstants.PONG));
         break;
