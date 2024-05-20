@@ -4,4 +4,5 @@ export default class CliCommands {
     public static SET = "SET";
     public static GET = "GET";
     public static INFO = "INFO";
+    public static REPLCONF = "REPLCONF";
 }

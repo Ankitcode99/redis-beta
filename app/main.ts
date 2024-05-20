@@ -19,8 +19,9 @@ if(masterInfo && masterInfo.length) {
     const slaveSocketClient = net.createConnection({host: masterInfo[0] as string, port: parseInt(masterInfo[1])});
     slaveSocketClient.on("connect", () => {
 
-        slaveSocketClient.write(RedisParser.convertToBulkStringArray(['PING']))
-
+        slaveSocketClient.write(RedisParser.convertToBulkStringArray(['PING']));
+        slaveSocketClient.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'listening-port', redisPort.toString()]));
+        slaveSocketClient.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'capa', 'psync2']));
     });
 }
 
@@ -53,7 +54,10 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
             }
         break;
         case CliCommands.INFO: 
-            connection.write(RedisParser.convertToBulkString(`role:${role}\r\nmaster_replid:${masterReplId}\r\nmaster_repl_offset:0`));
+            connection.write(RedisParser.convertToBulkString(`role:${role}\r\nmaster_replid:${masterReplId}\r\nmaster_repl_offset:${masterOffset}`));
+            break;
+        case CliCommands.REPLCONF:
+            connection.write(RedisParser.convertToSimpleString(ResponseConstants.OK));
             break;
     }
   });
