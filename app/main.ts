@@ -14,8 +14,19 @@ const role = process.argv[4] == "--replicaof" ? "slave" : "master";
 const masterReplId = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
 const masterOffset = 0;
 
-console.log(process.argv[3])
+const masterInfo = process.argv[5] && process.argv[5].length>0 ? process.argv[5].trim().split(' ') : ""
+// console.log(process.argv)
 // Uncomment this block to pass the first stage
+
+if(masterInfo && masterInfo.length) {
+    console.warn("GOING IN CLIENT SOCKET!!")
+    const slaveSocketClient = net.createConnection({host: masterInfo[0] as string, port: parseInt(masterInfo[1])});
+    slaveSocketClient.on("connect", () => {
+
+        slaveSocketClient.write(RedisParser.convertToBulkStringArray(['PING']))
+
+    });
+}
 
 const server: net.Server = net.createServer((connection: net.Socket) => {
 
@@ -31,17 +42,17 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
 
     switch (upperCase) {
         case CliCommands.PING:
-            connection.write(RedisParser.convertOutputToRESP(ResponseConstants.PONG, CliCommands.PING));
+            connection.write(RedisParser.convertToSimpleString(ResponseConstants.PONG));
         break;
         case CliCommands.ECHO:
-            connection.write(RedisParser.convertOutputToRESP(cmd[1], CliCommands.ECHO));
+            connection.write(RedisParser.convertToBulkString(cmd[1]))
         break;
         case CliCommands.GET:
-            connection.write(RedisParser.convertOutputToRESP(hashMap.get(cmd[1]), CliCommands.GET));
+            connection.write(RedisParser.convertToBulkString(hashMap.get(cmd[1])));
             break;
         case CliCommands.SET:
             hashMap.set(cmd[1], cmd[2]);
-            connection.write(RedisParser.convertOutputToRESP(ResponseConstants.OK, CliCommands.SET));
+            connection.write(RedisParser.convertToSimpleString(ResponseConstants.OK));
             if (cmd[3] && cmd[3].toUpperCase() == "PX") {
                 setTimeout(() => {
                 hashMap.delete(cmd[1]);
@@ -49,7 +60,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
             }
         break;
         case CliCommands.INFO: 
-            connection.write(RedisParser.convertOutputToRESP(`role:${role}\r\nmaster_replid:${masterReplId}\r\nmaster_repl_offset:0`, CliCommands.INFO));
+            connection.write(RedisParser.convertToBulkString(`role:${role}\r\nmaster_replid:${masterReplId}\r\nmaster_repl_offset:0`));
             break;
     }
   });

@@ -26,22 +26,19 @@ export default class RedisParser {
         return arr;
     }
 
-    public static convertOutputToRESP(output: string|undefined, command: string): string {
-        switch (command) {
-            case CliCommands.PING:
-            case CliCommands.SET:
-                return `+${output}\r\n`;
-            case CliCommands.ECHO:
-            case CliCommands.GET:
-                if(!output) {
-                    return "$-1\r\n"
-                }
-                return `\$${output.length}\r\n${output}\r\n`;
-            case CliCommands.INFO:
 
-                return `\$${output!.length}\r\n${output}\r\n`;
-            default:
-                return ""
-        }   
+    public static convertToBulkStringArray(values: string[]){
+        return `*${values.length}\r\n${values.map(v=> `\$${v.length}\r\n${v}\r\n`)}`
+    }
+
+    public static convertToSimpleString(output: string): string {
+        return `+${output}\r\n`;
+    }
+
+    public static convertToBulkString(output: string|undefined): string {
+        if(!output) {
+            return "$-1\r\n"
+        }
+        return `\$${output.length}\r\n${output}\r\n`;
     }
 }
