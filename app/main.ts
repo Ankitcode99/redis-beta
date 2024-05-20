@@ -1,6 +1,6 @@
 import RedisParser from "./parser";
 import CliCommands from "./commands";
-import ResponseConstants from "./contants";
+import ResponseConstants, { rdbData } from "./contants";
 import * as net from "node:net";
 
 
@@ -41,6 +41,7 @@ if(masterInfo && masterInfo.length) {
     })
 }
 
+
 const server: net.Server = net.createServer((connection: net.Socket) => {
 
   /* Handle connection */
@@ -77,6 +78,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
             break;
         case CliCommands.PSYNC:
             connection.write(RedisParser.convertToSimpleString(`FULLRESYNC ${masterReplId} 0`));
+            connection.write(`${rdbData.length}\r\n${rdbData}`)
             break;
     }
   });
