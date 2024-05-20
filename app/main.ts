@@ -78,7 +78,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
             break;
         case CliCommands.PSYNC:
             connection.write(RedisParser.convertToSimpleString(`FULLRESYNC ${masterReplId} 0`));
-            connection.write(`${rdbData.length}\r\n${rdbData}`)
+            connection.write(`$${rdbData.length}\r\n${rdbData}`)
             break;
     }
   });
