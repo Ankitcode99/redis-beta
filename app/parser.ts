@@ -4,7 +4,7 @@ export default class RedisParser {
 
     public static parseInput(input: string): string[] {
         const inp = input.trim().split("\r\n");
-        console.log(inp);
+        console.log("Input - ", inp);
         let arr:string[] = [];
         // let arrSize = -1;
 
@@ -28,7 +28,7 @@ export default class RedisParser {
 
 
     public static convertToBulkStringArray(values: string[]){
-        return `*${values.length}\r\n${values.map(v=> `\$${v.length}\r\n${v}\r\n`)}`
+        return `*${values.length}\r\n${values.map(v=> `\$${v.length}\r\n${v}\r\n`).join('')}`
     }
 
     public static convertToSimpleString(output: string): string {

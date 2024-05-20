@@ -17,12 +17,24 @@ const masterInfo = process.argv[5] && process.argv[5].length>0 ? process.argv[5]
 if(masterInfo && masterInfo.length) {
     console.warn("GOING IN CLIENT SOCKET!!")
     const slaveSocketClient = net.createConnection({host: masterInfo[0] as string, port: parseInt(masterInfo[1])});
-    slaveSocketClient.on("connect", () => {
-
-        slaveSocketClient.write(RedisParser.convertToBulkStringArray(['PING']));
-        slaveSocketClient.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'listening-port', redisPort.toString()]));
-        slaveSocketClient.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'capa', 'psync2']));
+    slaveSocketClient.on("connect", async() => {
+        slaveSocketClient.write(RedisParser.convertToBulkStringArray(['PING']));    
     });
+
+    let step = 1
+    slaveSocketClient.on('data', (data)=>{
+        console.log("got data from master - ", data.toString())
+        switch(step) {
+            case 1:
+                slaveSocketClient.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'listening-port', redisPort.toString()]));
+                step++;
+                break;
+            case 2:
+                slaveSocketClient.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'capa', 'psync2']));
+                step++;
+                break;
+        }
+    })
 }
 
 const server: net.Server = net.createServer((connection: net.Socket) => {
