@@ -78,11 +78,19 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
             break;
         case CliCommands.PSYNC:
             connection.write(RedisParser.convertToSimpleString(`FULLRESYNC ${masterReplId} 0`));
-            connection.write(`$${rdbData.length}\r\n${rdbData}`)
+            connection.write(serialize())
             break;
     }
   });
 
 });
+
+const serialize = () => {
+
+    const content = Buffer.from(rdbData, "hex");
+
+    return Buffer.concat([Buffer.from(`$${content.length}\r\n`), content]);
+
+}
 
 server.listen(redisPort, "127.0.0.1");
