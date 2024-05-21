@@ -52,7 +52,7 @@ const masterInfo = process.argv[5] && process.argv[5].length>0 ? process.argv[5]
 let instance:RedisInstance;
 if(masterInfo && masterInfo.length) {
     instance = RedisInstance.initReplica(masterInfo[0] ,masterInfo[1])
-    instance.performHandshakeWithMaster(parseInt(masterInfo[1]))
+    instance.performHandshakeWithMaster(redisPort)
 } else {
     instance = RedisInstance.initMaster();
 }
