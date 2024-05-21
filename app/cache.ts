@@ -157,14 +157,24 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
     const cmd = RedisParser.parseInput(command);
 
     console.log("handleReplicationCommands - ",cmd);
-    switch(cmd[0]) {
-        case CliCommands.SET:
-            slaveInstance.storage.set(cmd[1],cmd[2]);
-            if(cmd[3] && cmd[3]=='px' && cmd[4]){
+    // switch(cmd[0]) {
+    //     case CliCommands.SET:
+    //         slaveInstance.storage.set(cmd[1],cmd[2]);
+            
+    // }    
+    for(let i=0;i<cmd.length;) {
+        if(cmd[i]=="SET") {
+            slaveInstance.storage.set(cmd[i+1],cmd[i+2]);
+            if(cmd[i+3] && cmd[i+3]=='px' && cmd[i+4]){
                 setTimeout(()=>{
-                    console.log("Deleting key ",cmd[1],"from slave ",slaveInstance.replId)
-                    slaveInstance.storage.delete(cmd[1]);
+                    console.log("Deleting key ",cmd[i+1],"from slave ",slaveInstance.replId)
+                    slaveInstance.storage.delete(cmd[i+1]);
                 }, parseInt(cmd[4]))
+
+                i = i+5;
+            }else{
+                i=i+3;
             }
-    }    
+        }
+    }
 }
