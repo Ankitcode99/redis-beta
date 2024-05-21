@@ -61,7 +61,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
   /* Handle connection */
 
   connection.on("data", (data) => {
-
+    console.log("At", role)
     const cmd = RedisParser.parseInput(data.toString());
     console.log("cmd: " + cmd);
 
