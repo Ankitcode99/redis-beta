@@ -78,6 +78,7 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
         case CliCommands.SET:
             instance.storage.set(cmd[1], cmd[2]);
             instance.propagateCommandToSlaves(data.toString());
+            console.log("Sending write response in MASTER! ", cmd[1], cmd[2]);
             connection.write(RedisParser.convertToSimpleString(ResponseConstants.OK));
             
 
