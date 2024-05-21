@@ -77,8 +77,9 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
             break;
         case CliCommands.SET:
             instance.storage.set(cmd[1], cmd[2]);
-            connection.write(RedisParser.convertToSimpleString(ResponseConstants.OK));
             instance.propagateCommandToSlaves(data.toString());
+            connection.write(RedisParser.convertToSimpleString(ResponseConstants.OK));
+            
 
             if (cmd[3] && cmd[3].toUpperCase() == "PX") {
                 setTimeout(() => {
@@ -112,5 +113,5 @@ const serialize = () => {
 }
 
 server.listen(redisPort, "127.0.0.1", ()=> {
-    console.log(`${role.toUpperCase()} is ready and listening on localhost  ${redisPort}`)
+    console.log(`\n\n${role.toUpperCase()} is ready and listening on localhost ${redisPort}`)
 });
