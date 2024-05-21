@@ -79,11 +79,8 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
             instance.storage.set(cmd[1], cmd[2]);
             
             connection.write(RedisParser.convertToSimpleString(ResponseConstants.OK));
-            setTimeout(()=>{
-                console.log("Propagating to slaves - ", data.toString())
-                instance.propagateCommandToSlaves(data.toString());
-                console.log("Sending write response in MASTER! ", cmd[1], cmd[2]);
-            }, 1)
+            instance.propagateCommandToSlaves(data.toString());
+                
 
             if (cmd[3] && cmd[3].toUpperCase() == "PX") {
                 setTimeout(() => {
