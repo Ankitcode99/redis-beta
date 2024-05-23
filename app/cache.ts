@@ -115,6 +115,7 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
   
     socket.on("data", (data: Buffer) => {
   
+        console.log(`Handshake ${step}/5`, { data: data.toString() });
         if (isComplete) {
             const res = handleReplicationCommands(data.toString(), slaveInstance);
             // if (isDefined(res)) {
@@ -123,7 +124,6 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
             return;
         }
   
-        console.log(`Handshake ${step}/5`, { data: data.toString() });
 
         switch (step) {
   
