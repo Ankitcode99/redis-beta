@@ -118,9 +118,9 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
         console.log(`Handshake ${step}/5`, { data: data.toString() });
         if (isComplete) {
             const res = handleReplicationCommands(data.toString(), slaveInstance);
-            // if (isDefined(res)) {
-            //     socket.write(res);
-            // }
+            if (res) {
+                socket.write(res);
+            }
             return;
         }
   
@@ -175,6 +175,10 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
             }else{
                 i=i+3;
             }
+        } else if(cmd[i] == 'REPLCONF') {
+            return RedisParser.convertToBulkStringArray(['REPLCONF', 'ACK', '0'])
         }
     }
+
+    return null
 }
