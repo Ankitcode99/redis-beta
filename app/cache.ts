@@ -118,6 +118,7 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
         console.log(`Handshake ${step}/5`, { data: data.toString() });
         if (isComplete) {
             const res = handleReplicationCommands(data.toString(), slaveInstance);
+            console.log("Writing back to master", res);
             if (res) {
                 socket.write(res);
             }
