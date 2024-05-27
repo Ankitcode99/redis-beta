@@ -155,7 +155,8 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
             case 5:
                 console.log("[slave] Got RDB File. HANDSHAKE COMPLETED for slave "+slaveInstance.replId);
                 isComplete = true
-                // socket.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'ACK', '0']))
+                socket.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'ACK', '0']))
+                slaveInstance.updateReplicationOffset((RedisParser.convertToBulkStringArray(['REPLCONF', 'ACK', '0'])).length)
         }
   
         step++;
