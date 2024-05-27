@@ -192,7 +192,7 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
             }else{
                 i=i+3;
             }
-            return RedisParser.convertToSimpleString(ResponseConstants.OK)
+            return RedisParser.convertToBulkStringArray([ResponseConstants.OK])
         } else if(parts[i][0]==CliCommands.PING) {
             slaveInstance.updateReplicationOffset(command.length)
             // return RedisParser.convertToBulkStringArray([ResponseConstants.PONG])
