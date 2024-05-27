@@ -125,6 +125,8 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
     socket.on("data", (data: Buffer) => {
   
         console.log(`Handshake ${step}/5`, { data: data.toString() });
+        const parts = parseMultiRespCommand(data.toString());
+        console.log(`Handshake ${step} parts: ${parts}`);
         if (isComplete) {
             const res = handleReplicationCommands(data.toString(), slaveInstance);
             console.log("Writing back to master", res);
@@ -134,7 +136,7 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
             return;
         }
   
-        // while(step<=5) {
+        for(let idx=0;idx<parts.length;idx++)  {
 
             switch (step) {
     
@@ -161,7 +163,7 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
             }
     
             step++;
-        // }
+        }
     });
   
 }
