@@ -134,31 +134,32 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
             return;
         }
   
+        while(step<=5) {
 
-        switch (step) {
-  
-            case 1:
-                socket.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'listening-port', port.toString()]));
-                break;
+            switch (step) {
+    
+                case 1:
+                    socket.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'listening-port', port.toString()]));
+                    break;
 
-            case 2:
-                socket.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'capa', 'psync2']));
-                break;
+                case 2:
+                    socket.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'capa', 'psync2']));
+                    break;
 
-            case 3:
-                socket.write(RedisParser.convertToBulkStringArray(['PSYNC', '?', '-1']));
-                break;
+                case 3:
+                    socket.write(RedisParser.convertToBulkStringArray(['PSYNC', '?', '-1']));
+                    break;
 
-            case 4:
-                console.log("[slave]Got FULLRESYNC ");
-                break;
-            case 5:
-                console.log("[slave] Got RDB File. HANDSHAKE COMPLETED for slave "+slaveInstance.replId);
-                isComplete = true
+                case 4:
+                    console.log("[slave]Got FULLRESYNC ");
+                    break;
+                case 5:
+                    console.log("[slave] Got RDB File. HANDSHAKE COMPLETED for slave "+slaveInstance.replId);
+                    isComplete = true
+            }
+    
+            step++;
         }
-  
-        step++;
-  
     });
   
 }
