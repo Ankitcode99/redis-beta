@@ -98,7 +98,10 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
         case CliCommands.PSYNC:
             instance.addSlaves(connection)
             connection.write(RedisParser.convertToSimpleString(`FULLRESYNC ${masterReplId} 0`));
-            connection.write(serialize())
+            setTimeout(()=>{
+                connection.write(serialize())
+
+            },1)
             break;
     }
   });
