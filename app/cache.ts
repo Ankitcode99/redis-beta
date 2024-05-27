@@ -168,6 +168,8 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
 function handleReplicationCommands(command: string, slaveInstance: RedisInstance) {
     const cmd = RedisParser.parseInput(command);
 
+    console.log("PARTS- ", parseMultiRespCommand(command))
+
     console.log("handleReplicationCommands - ",cmd);
     // switch(cmd[0]) {
     //     case CliCommands.SET:
@@ -197,4 +199,27 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
     slaveInstance.updateReplicationOffset(command.length)
 
     return null
+}
+
+
+export function parseMultiRespCommand(cmd: string): string[][] {
+    const lines = cmd.split("\r\n");
+    const parts: string[][] = [];
+    let tmp: string[] = [];
+    for (let i = 1; i < lines.length; i++) { 
+      if (lines[i] === "" || lines[i].startsWith("$")) {  
+        continue;
+      }
+  
+      if (lines[i].startsWith("*") && lines[i].length > 1) {
+        parts.push(tmp);
+        tmp = []
+      } else {
+        tmp.push(lines[i]);
+      }
+    }
+  
+    parts.push(tmp);
+  
+    return parts;
 }
