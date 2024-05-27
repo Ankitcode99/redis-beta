@@ -2,6 +2,7 @@ import * as net from "net";
 import { randomUUID } from "node:crypto";
 import RedisParser from "./parser";
 import CliCommands from "./commands";
+import ResponseConstants from "./contants";
 enum InstanceRole {
     MASTER = "master",
     REPLICA = "slave", 
@@ -14,7 +15,7 @@ export class RedisInstance {
     constructor(
         readonly role: InstanceRole,
         readonly replId: string, //  replication Id
-        readonly replicationOffset: number,
+        private replicationOffset: number,
         public readonly masterConfig?: Record<string, any>
     ) {}
 
@@ -66,6 +67,14 @@ export class RedisInstance {
         const host = this.masterConfig["masterHost"];
         const port = this.masterConfig["masterPort"];
         return `${host}:${port}`;
+    }
+
+    updateReplicationOffset(inputLength: number) {
+        this.replicationOffset += inputLength;
+    }
+
+    getReplicationOffset() {
+        return this.replicationOffset;
     }
 
 
@@ -146,7 +155,7 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
             case 5:
                 console.log("[slave] Got RDB File. HANDSHAKE COMPLETED for slave "+slaveInstance.replId);
                 isComplete = true
-                socket.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'ACK', '0']))
+                // socket.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'ACK', '0']))
         }
   
         step++;
@@ -165,7 +174,7 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
             
     // }    
     for(let i=0;i<cmd.length;) {
-        if(cmd[i]=="SET") {
+        if(cmd[i]==CliCommands.SET) {
             slaveInstance.storage.set(cmd[i+1],cmd[i+2]);
             if(cmd[i+3] && cmd[i+3]=='px' && cmd[i+4]){
                 setTimeout(()=>{
@@ -177,8 +186,14 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
             }else{
                 i=i+3;
             }
-        } 
+        } else if(cmd[i]==CliCommands.PING) {
+            return RedisParser.convertToSimpleString(ResponseConstants.PONG)
+        } else if(cmd[i] == CliCommands.REPLCONF) {
+            return RedisParser.convertToBulkStringArray([CliCommands.REPLCONF, 'ACK', slaveInstance.getReplicationOffset().toString()])
+        }
     }
+
+    slaveInstance.updateReplicationOffset(command.length)
 
     return null
 }
