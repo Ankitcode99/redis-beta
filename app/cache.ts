@@ -151,7 +151,7 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
 
             case 4:
                 console.log("[slave]Got FULLRESYNC ");
-                // break;
+                break;
             case 5:
                 console.log("[slave] Got RDB File. HANDSHAKE COMPLETED for slave "+slaveInstance.replId);
                 isComplete = true
