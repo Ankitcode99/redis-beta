@@ -167,7 +167,7 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
 
 function handleReplicationCommands(command: string, slaveInstance: RedisInstance) {
     const cmd = RedisParser.parseInput(command);
-
+    const parts = parseMultiRespCommand(command);
     console.log("PARTS- ", parseMultiRespCommand(command))
 
     console.log("handleReplicationCommands - ",cmd);
@@ -176,22 +176,22 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
     //         slaveInstance.storage.set(cmd[1],cmd[2]);
             
     // }    
-    for(let i=0;i<cmd.length;) {
-        if(cmd[i]==CliCommands.SET) {
-            slaveInstance.storage.set(cmd[i+1],cmd[i+2]);
-            if(cmd[i+3] && cmd[i+3]=='px' && cmd[i+4]){
+    for(let i=0;i<parts.length;i++) {
+        if(parts[i][0]==CliCommands.SET) {
+            slaveInstance.storage.set(parts[i][1],parts[i][2]);
+            if(parts[i][3] && parts[i][3]=='px' && parts[i][4]){
                 setTimeout(()=>{
-                    console.log("Deleting key ",cmd[i+1],"from slave ",slaveInstance.replId)
-                    slaveInstance.storage.delete(cmd[i+1]);
-                }, parseInt(cmd[4]))
+                    console.log("Deleting key ",parts[i][1],"from slave ",slaveInstance.replId)
+                    slaveInstance.storage.delete(parts[i][1]);
+                }, parseInt(parts[i][4]))
 
                 i = i+5;
             }else{
                 i=i+3;
             }
-        } else if(cmd[i]==CliCommands.PING) {
+        } else if(parts[i][0]==CliCommands.PING) {
             return RedisParser.convertToBulkStringArray([ResponseConstants.PONG])
-        } else if(cmd[i] == CliCommands.REPLCONF) {
+        } else if(parts[i][0]== CliCommands.REPLCONF) {
             return RedisParser.convertToBulkStringArray([CliCommands.REPLCONF, 'ACK', slaveInstance.getReplicationOffset().toString()])
         }
     }
