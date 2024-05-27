@@ -177,8 +177,10 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
     //         slaveInstance.storage.set(cmd[1],cmd[2]);
             
     // }    
+    
     for(let i=0;i<parts.length;i++) {
         if(parts[i][0]==CliCommands.SET) {
+            slaveInstance.updateReplicationOffset(command.length)
             slaveInstance.storage.set(parts[i][1],parts[i][2]);
             if(parts[i][3] && parts[i][3]=='px' && parts[i][4]){
                 setTimeout(()=>{
@@ -191,13 +193,16 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
                 i=i+3;
             }
         } else if(parts[i][0]==CliCommands.PING) {
-            // return RedisParser.convertToBulkStringArray([ResponseConstants.PONG])
+            slaveInstance.updateReplicationOffset(command.length)
+            return RedisParser.convertToBulkStringArray([ResponseConstants.PONG])
         } else if(parts[i][0]== CliCommands.REPLCONF) {
-            return RedisParser.convertToBulkStringArray([CliCommands.REPLCONF, 'ACK', slaveInstance.getReplicationOffset().toString()])
+            const res:string = RedisParser.convertToBulkStringArray([CliCommands.REPLCONF, 'ACK', slaveInstance.getReplicationOffset().toString()])
+            slaveInstance.updateReplicationOffset(command.length);
+            return res;
         }
     }
 
-    slaveInstance.updateReplicationOffset(command.length)
+    
 
     return null
 }
