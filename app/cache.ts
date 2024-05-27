@@ -194,7 +194,7 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
             }
         } else if(parts[i][0]==CliCommands.PING) {
             slaveInstance.updateReplicationOffset(command.length)
-            return RedisParser.convertToBulkStringArray([ResponseConstants.PONG])
+            // return RedisParser.convertToBulkStringArray([ResponseConstants.PONG])
         } else if(parts[i][0]== CliCommands.REPLCONF) {
             const res:string = RedisParser.convertToBulkStringArray([CliCommands.REPLCONF, 'ACK', slaveInstance.getReplicationOffset().toString()])
             slaveInstance.updateReplicationOffset(command.length);
