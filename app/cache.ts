@@ -203,8 +203,6 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
         }
     }
 
-    
-
     return null
 }
 
