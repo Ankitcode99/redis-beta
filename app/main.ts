@@ -103,6 +103,10 @@ const server: net.Server = net.createServer((connection: net.Socket) => {
 
             },1)
             break;
+        case CliCommands.WAIT:
+            connection.write(RedisParser.convertToSimpleInteger(0));
+            break;
+            
     }
   });
 

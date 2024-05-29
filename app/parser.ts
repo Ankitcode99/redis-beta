@@ -41,4 +41,8 @@ export default class RedisParser {
         }
         return `\$${output.length}\r\n${output}\r\n`;
     }
+
+    public static convertToSimpleInteger(value: number): string {
+        return `:${value}`;
+    }
 }
