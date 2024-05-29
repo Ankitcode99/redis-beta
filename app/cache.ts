@@ -186,6 +186,7 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
     // }    
     
     for(let i=0;i<parts.length;i++) {
+        console.log("Currently at index " + i);
         if(parts[i][0]==CliCommands.SET) {
             slaveInstance.updateReplicationOffset(command.length)
             slaveInstance.storage.set(parts[i][1],parts[i][2]);
