@@ -174,11 +174,11 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
 }
 
 function handleReplicationCommands(command: string, slaveInstance: RedisInstance) {
-    const cmd = RedisParser.parseInput(command);
+    // const cmd = RedisParser.parseInput(command);
     const parts = parseMultiRespCommand(command);
     console.log("PARTS- ", parseMultiRespCommand(command))
 
-    console.log("handleReplicationCommands - ",cmd);
+    // console.log("handleReplicationCommands - ",cmd);
     // switch(cmd[0]) {
     //     case CliCommands.SET:
     //         slaveInstance.storage.set(cmd[1],cmd[2]);
@@ -194,8 +194,6 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
                     console.log("Deleting key ",parts[i][1],"from slave ",slaveInstance.replId)
                     slaveInstance.storage.delete(parts[i][1]);
                 }, parseInt(parts[i][4]))
-
-                
             }
             return RedisParser.convertToBulkStringArray([ResponseConstants.OK])
         } else if(parts[i][0]==CliCommands.PING) {
