@@ -43,6 +43,6 @@ export default class RedisParser {
     }
 
     public static convertToSimpleInteger(value: number): string {
-        return `:${value}`;
+        return `:${value}\r\n`;
     }
 }
