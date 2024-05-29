@@ -136,7 +136,7 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
             return;
         }
   
-        // for(let idx=0;idx<parts.length;idx++)  {
+        for(let idx=0;idx<parts.length;idx++)  {
 
             switch (step) {
     
@@ -167,7 +167,7 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
             }
     
             step++;
-        // }
+        }
     });
   
 }
