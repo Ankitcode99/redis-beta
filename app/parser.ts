@@ -1,44 +1,60 @@
-import CliCommands from "./commands";
+let data: string[];
 
-export default class RedisParser {
+export function RESP2parser(passedData: string[], ind = 0) {
+  data = passedData;
+  let ans: any = [];
+  let index = 0;
+  while (index < passedData.length) {
+    const data = helper(index);
+    index += data[1];
+    if (Array.isArray(data[0])) ans = [...ans, ...data[0]];
+    else ans.push(data[0]);
+  }
+  return ans;
+}
 
-    public static parseInput(input: string): string[] {
-        const inp = input.trim().split("\r\n");
-        console.log("Input - ", inp);
-        let arr:string[] = [];
-        // let arrSize = -1;
+function handleArray(ind: number) {
+  let ans: any = [];
+  let length = Number(data[ind].substring(1));
+  ind++;
+  let further = 0;
+  while (length > 0) {
+    let temp = helper(ind);
+    ans.push(temp[0]);
+    ind += temp[1];
+    length--;
+    further += temp[1];
+  }
+  return [ans, further + 1];
+}
 
-        for (let idx = 0; idx < inp.length; ) {
-            const wildCard = inp[idx].charAt(0);
+function helper(ind: number) {
+  if (data[ind][0] == "*") return handleArray(ind);
+  switch (data[ind][0]) {
+    case "+":
+      return [handleSimpleString(data[ind]), 1];
+    case "$":
+      return [handleBulkString(data[ind + 1]), 2];
+    case ":":
+      return [handleInteger(data[ind]), 1];
+    default:
+      return [handleError(data[ind]), 1];
+  }
+}
 
-            switch (wildCard) {
-                case "*":
-                    // arrSize = parseInt(inp[0].substring(1));
-                    idx++;
-                break;
-                case "$":
-                    const len = parseInt(inp[idx].substring(1));
-                    const command = inp[idx + 1].substring(0, 0 + len);
-                    arr.push(command);
-                    idx += 2;
-            }
-        }
-        return arr;
-    }
+function handleSimpleString(data: string) {
+  return data.substring(1);
+}
 
+function handleInteger(data: string) {
+  if (["+", "-"].includes(data[1])) return data.substring(2);
+  return Number(data.substring(1));
+}
 
-    public static convertToBulkStringArray(values: string[]){
-        return `*${values.length}\r\n${values.map(v=> `\$${v.length}\r\n${v}\r\n`).join('')}`
-    }
+function handleBulkString(data: string) {
+  return data;
+}
 
-    public static convertToSimpleString(output: string): string {
-        return `+${output}\r\n`;
-    }
-
-    public static convertToBulkString(output: string|undefined): string {
-        if(!output) {
-            return "$-1\r\n"
-        }
-        return `\$${output.length}\r\n${output}\r\n`;
-    }
+function handleError(data: string) {
+  return data.substring(1);
 }

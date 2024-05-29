@@ -1,121 +1,175 @@
-import RedisParser from "./parser";
-import CliCommands from "./commands";
-import ResponseConstants, { rdbData } from "./contants";
 import * as net from "node:net";
-import { RedisInstance } from "./cache";
+import { RESP2parser } from "./parser";
+import { argv } from "node:process";
+import { Buffer } from "node:buffer";
 
+const PORT = argv[3] ? Number(argv[3]) : 6379;
+const map = {};
+const timemap = {};
+const replicas: net.Socket[] = [];
+let master: number | undefined = undefined;
+if (argv[4] && argv[4] === "--replicaof") master = Number(argv[6]);
 
-const hashMap = new Map();
-const redisPort = parseInt(process.argv[3]) || 6379;
-const role = process.argv[4] == "--replicaof" ? "slave" : "master";
+const PING = `*1\r\n$4\r\nping\r\n`;
+const REPLCONF = `*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n6380\r\n`;
+const REPLCONFCapa = `*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n`;
+const PSYNC = `*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n`;
 
-const masterReplId = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
-const masterOffset = 0;
+const MASTERREPLID = `8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb`;
+const MASTERREPLOFFSET = 0;
+const EMPTYRDBFILE_BASE64 =
+  "UkVESVMwMDEx+glyZWRpcy12ZXIFNy4yLjD6CnJlZGlzLWJpdHPAQPoFY3RpbWXCbQi8ZfoIdXNlZC1tZW3CsMQQAPoIYW9mLWJhc2XAAP/wbjv+wP9aog==";
+const REPLCONFGETBACK = `*3\r\n$8\r\nreplconf\r\n$6\r\ngetack\r\n$1\r\n*\r\n`;
 
-const masterInfo = process.argv[5] && process.argv[5].length>0 ? process.argv[5].trim().split(' ') : ""
+const handshake = [REPLCONF, REPLCONFCapa, PSYNC];
+let byteProcessed = 0;
 
+const sendEmptyRDBFile = () => {
+  const body = Buffer.from(EMPTYRDBFILE_BASE64, "base64");
+  const len = body.length;
+  const head = Buffer.from(`$${len}\r\n`);
+  return Buffer.concat([head, body]);
+  1;
+};
 
-// if(masterInfo && masterInfo.length) {
-//     console.warn("GOING IN CLIENT SOCKET!!")
-//     const slaveSocketClient = net.createConnection({host: masterInfo[0] as string, port: parseInt(masterInfo[1])});
-//     slaveSocketClient.on("connect", async() => {
-//         slaveSocketClient.write(RedisParser.convertToBulkStringArray(['PING']));    
-//     });
+const forwardToReplicas = async (data: Buffer) => {
+  replicas.map((conn) => {
+    conn.write(data);
+  });
+};
 
-//     let step = 1
-//     slaveSocketClient.on('data', (data)=>{
-//         console.log("got data from master - ", data.toString())
+if (master !== undefined) {
+  let step = 0;
+  const masterConn = net.createConnection(master, "localhost", () => {
+    masterConn.write(PING);
+    return;
+  });
 
-//         // if(step > 4) {
-//         //     handleReplication()
-//         // }
+  masterConn.on("data", (data) => {
+    const req = data.toString().toLowerCase();
 
-//         switch(step) {
-//             case 1:
-//                 slaveSocketClient.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'listening-port', redisPort.toString()]));
-//                 step++;
-//                 break;
-//             case 2:
-//                 slaveSocketClient.write(RedisParser.convertToBulkStringArray(['REPLCONF', 'capa', 'psync2']));
-//                 step++;
-//                 break;
-//             case 3: 
-//                 slaveSocketClient.write(RedisParser.convertToBulkStringArray(['PSYNC', '?', '-1']))
-//                 step++;
-//                 break;
-//             case 4:
-//                 console.log("Got RDB file! Handshake completed!")
-//                 break;
-//         }
-//     })
-// }
-let instance:RedisInstance;
-if(masterInfo && masterInfo.length) {
-    instance = RedisInstance.initReplica(masterInfo[0] ,masterInfo[1])
-    instance.performHandshakeWithMaster(redisPort)
-} else {
-    instance = RedisInstance.initMaster();
+    if (req.includes(REPLCONFGETBACK)) {
+      const tempOffset = String(byteProcessed);
+      masterConn.write(
+        `*3\r\n$8\r\nREPLCONF\r\n$3\r\nACK\r\n$${tempOffset.length}\r\n${tempOffset}\r\n`
+      );
+      byteProcessed += req.length;
+
+      return;
+    }
+    byteProcessed += req.length;
+
+    const parsedReq = RESP2parser(req.split("\r\n"));
+
+    if (parsedReq.includes("pong")) {
+      masterConn.write(handshake[step++]);
+      return;
+    }
+
+    if (step < 3 && parsedReq.includes("ok")) {
+      masterConn.write(handshake[step]);
+      byteProcessed = 0;
+
+      step++;
+      return;
+    }
+
+    console.log(byteProcessed);
+    if (parsedReq.includes("set")) {
+      const indices: number[] = [];
+      let idx: number = parsedReq.indexOf("set");
+      while (idx !== -1) {
+        indices.push(idx);
+        idx = parsedReq.indexOf("set", idx + 1);
+      }
+      indices.map((index) => {
+        map[parsedReq[index + 1]] = parsedReq[index + 2];
+        if (parsedReq.length > index + 3 && parsedReq[index + 3] === "px") {
+          let expTime = Number(Date.now());
+          expTime += Number(parsedReq[index + 4]);
+          timemap[parsedReq[index + 1]] = expTime;
+        }
+      });
+
+      return;
+    }
+    if (step < 4) {
+      byteProcessed = 0;
+      step++;
+    }
+  });
 }
 
 const server: net.Server = net.createServer((connection: net.Socket) => {
-  /* Handle connection */
+  // Handle connection
+  connection.on("data", (data: Buffer) => {
+    const req = data.toString().toLowerCase();
 
-  connection.on("data", (data) => {
-    console.log("At", role)
-    const cmd = RedisParser.parseInput(data.toString());
-    console.log("cmd: " + cmd);
+    if ([REPLCONF.toLowerCase(), REPLCONFCapa.toLowerCase()].includes(req)) {
+      connection.write("+OK\r\n");
+      return;
+    }
+    if (PSYNC.toLowerCase() === req) {
+      connection.write(`+FULLRESYNC ${MASTERREPLID} ${MASTERREPLOFFSET}\r\n`);
+      connection.write(sendEmptyRDBFile());
+      replicas.push(connection);
+      return;
+    }
+    const parsedReq = RESP2parser(req.split("\r\n"));
 
-    switch (cmd[0].toUpperCase()) {
-        case CliCommands.PING:
-            connection.write(RedisParser.convertToSimpleString(ResponseConstants.PONG));
-        break;
-        case CliCommands.ECHO:
-            connection.write(RedisParser.convertToBulkString(cmd[1]))
-        break;
-        case CliCommands.GET:
-            connection.write(RedisParser.convertToBulkString(instance.storage.get(cmd[1])));
-            break;
-        case CliCommands.SET:
-            instance.storage.set(cmd[1], cmd[2]);
-            
-            connection.write(RedisParser.convertToSimpleString(ResponseConstants.OK));
-            instance.propagateCommandToSlaves(data.toString());
-                
+    if (parsedReq.includes("ping")) {
+      connection.write("+PONG\r\n");
+      return;
+    }
 
-            if (cmd[3] && cmd[3].toUpperCase() == "PX") {
-                setTimeout(() => {
-                    console.log("Deleting key ",cmd[1],"from master!")
-                    instance.storage.delete(cmd[1]);
-                }, parseInt(cmd[4]));
-            }
-        break;
-        case CliCommands.INFO: 
-            connection.write(RedisParser.convertToBulkString(`role:${role}\r\nmaster_replid:${masterReplId}\r\nmaster_repl_offset:${masterOffset}`));
-            break;
-        case CliCommands.REPLCONF:
-            connection.write(RedisParser.convertToSimpleString(ResponseConstants.OK));
-            break;
-        case CliCommands.PSYNC:
-            instance.addSlaves(connection)
-            connection.write(RedisParser.convertToSimpleString(`FULLRESYNC ${masterReplId} 0`));
-            setTimeout(()=>{
-                connection.write(serialize())
+    if (parsedReq.includes("echo")) {
+      connection.write(`$${parsedReq[1].length}\r\n${parsedReq[1]}\r\n`);
+      return;
+    }
 
-            },1)
-            break;
+    if (parsedReq.includes("set")) {
+      map[parsedReq[1]] = parsedReq[2];
+      if (parsedReq.length > 3 && parsedReq[3] === "px") {
+        let expTime = Number(Date.now());
+        expTime += Number(parsedReq[4]);
+        timemap[parsedReq[1]] = expTime;
+      }
+      connection.write(`+OK\r\n`);
+      forwardToReplicas(data);
+      return;
+    }
+
+    if (parsedReq.includes("get")) {
+      if (!map[parsedReq[1]]) {
+        connection.write(`$-1\r\n`);
+        return;
+      }
+      if (!timemap[parsedReq[1]]) {
+        connection.write(`+${map[parsedReq[1]]}\r\n`);
+        return;
+      }
+      if (timemap[parsedReq[1]] >= Date.now()) {
+        connection.write(`+${map[parsedReq[1]]}\r\n`);
+        return;
+      }
+
+      delete timemap[parsedReq[1]];
+      connection.write(`$-1\r\n`);
+    }
+
+    if (parsedReq.includes("info")) {
+      switch (parsedReq[1]) {
+        case "replication":
+          master === undefined
+            ? connection.write(
+                `$87\r\nrole:master\nmaster_replid:${MASTERREPLID}\nmaster_repl_offset:${MASTERREPLOFFSET}\r\n`
+              )
+            : connection.write(
+                `$86\r\nrole:slave\nmaster_replid:${MASTERREPLID}\nmaster_repl_offset:${MASTERREPLOFFSET}\r\n`
+              );
+      }
+      return;
     }
   });
-
 });
-
-const serialize = () => {
-
-    const content = Buffer.from(rdbData, "hex");
-
-    return Buffer.concat([Buffer.from(`$${content.length}\r\n`), content]);
-
-}
-
-server.listen(redisPort, "127.0.0.1", ()=> {
-    console.log(`\n\n${role.toUpperCase()} is ready and listening on localhost ${redisPort}`)
-});
+server.listen(PORT, "127.0.0.1");
