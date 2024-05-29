@@ -196,7 +196,7 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
                     slaveInstance.storage.delete(parts[i][1]);
                 }, parseInt(parts[i][4]))
             }
-            return null;//RedisParser.convertToBulkStringArray([ResponseConstants.OK])
+           //RedisParser.convertToBulkStringArray([ResponseConstants.OK])
         } else if(parts[i][0]==CliCommands.PING) {
             slaveInstance.updateReplicationOffset(command.length)
             // return RedisParser.convertToBulkStringArray([ResponseConstants.PONG])
