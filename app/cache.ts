@@ -41,6 +41,10 @@ export class RedisInstance {
         this.slaves.push(connString);
     }
 
+    getSlavesCount() {
+        return this.slaves.length;
+    }
+
     propagateCommandToSlaves(cmd: string) {
         console.log("Propagating - ",cmd,"   to slaves!")
         for (const conn of this.slaves) {
