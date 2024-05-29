@@ -190,6 +190,8 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
         console.log("Currently at index " + i, "  parts[i][0] -"+parts[i][0]);
         if(parts[i][0]==CliCommands.SET) {
             slaveInstance.updateReplicationOffset(command.length)
+            console.log("\n\n***************    NEW VALUE = ",slaveInstance.getReplicationOffset(), "\n\n")
+                    
             slaveInstance.storage.set(parts[i][1],parts[i][2]);
             if(parts[i][3] && parts[i][3]=='px' && parts[i][4]){
                 setTimeout(()=>{
@@ -200,6 +202,8 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
            //RedisParser.convertToBulkStringArray([ResponseConstants.OK])
         } else if(parts[i][0]==CliCommands.PING) {
             slaveInstance.updateReplicationOffset(command.length)
+            console.log("\n\n***************    NEW VALUE = ",slaveInstance.getReplicationOffset(), "\n\n")
+                    
             // return RedisParser.convertToBulkStringArray([ResponseConstants.PONG])
         } else if(parts[i][0]== CliCommands.REPLCONF) {
             const res:string = RedisParser.convertToBulkStringArray([CliCommands.REPLCONF, 'ACK', slaveInstance.getReplicationOffset().toString()])
