@@ -189,7 +189,7 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
     for(let i=0;i<parts.length;i++) {
         console.log("Currently at index " + i, "  parts[i][0] -"+parts[i][0]);
         if(parts[i][0]==CliCommands.SET) {
-            slaveInstance.updateReplicationOffset(command.length)
+            slaveInstance.updateReplicationOffset(RedisParser.convertToBulkStringArray(parts[i]).length)
             console.log("\n\n***************    NEW VALUE = ",slaveInstance.getReplicationOffset(), "\n\n")
                     
             slaveInstance.storage.set(parts[i][1],parts[i][2]);
@@ -201,13 +201,13 @@ function handleReplicationCommands(command: string, slaveInstance: RedisInstance
             }
            //RedisParser.convertToBulkStringArray([ResponseConstants.OK])
         } else if(parts[i][0]==CliCommands.PING) {
-            slaveInstance.updateReplicationOffset(command.length)
+            slaveInstance.updateReplicationOffset(RedisParser.convertToBulkStringArray(parts[i]).length)
             console.log("\n\n***************    NEW VALUE = ",slaveInstance.getReplicationOffset(), "\n\n")
                     
             // return RedisParser.convertToBulkStringArray([ResponseConstants.PONG])
         } else if(parts[i][0]== CliCommands.REPLCONF) {
             const res:string = RedisParser.convertToBulkStringArray([CliCommands.REPLCONF, 'ACK', slaveInstance.getReplicationOffset().toString()])
-            slaveInstance.updateReplicationOffset(command.length);
+            slaveInstance.updateReplicationOffset(RedisParser.convertToBulkStringArray(parts[i]).length);
             return res;
         }
     }
