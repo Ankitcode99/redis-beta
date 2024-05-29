@@ -1,5 +1,5 @@
 import * as net from "node:net";
-import { RESP2parser } from "./parser";
+import { RESP2parser } from "./parser.js";
 import { argv } from "node:process";
 import { Buffer } from "node:buffer";
 
