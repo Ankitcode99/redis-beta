@@ -155,11 +155,12 @@ function handshakeLoop(socket: net.Socket, port: number, slaveInstance: RedisIns
                 case 4:
                     console.log("[slave]Got FULLRESYNC ");
                     // isComplete = true
+                    socket.write(RedisParser.convertToBulkStringArray([CliCommands.REPLCONF, 'ACK', slaveInstance.getReplicationOffset().toString()]));
+
                     break;
                 case 5:
                     console.log("[slave] Got RDB File. HANDSHAKE COMPLETED for slave "+slaveInstance.replId);
                     isComplete = true
-                    socket.write(RedisParser.convertToBulkStringArray([CliCommands.REPLCONF, 'ACK', slaveInstance.getReplicationOffset().toString()]));
                     slaveInstance.updateReplicationOffset(37)
 
                     // slaveInstance.updateReplicationOffset(0)
